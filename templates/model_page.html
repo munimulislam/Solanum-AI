@@ -1,0 +1,118 @@
+{% extends "base.html" %}{% block content %}
+<div class="flex justify-between items-center mb-2">
+    <h1 class="text-2xl font-bold">{{ model.display_name }}</h1>
+    <a href="/" class="btn btn-sm btn-ghost">← Models</a>
+</div>
+
+<div role="tablist" class="tabs tabs-border mb-4">
+    <a role="tab" href="/model/{{ model.key }}?tab=predict"
+        class="tab {% if tab=='predict' %}tab-active{% endif %}">Predict</a>
+    <a role="tab" href="/model/{{ model.key }}?tab=performance"
+        class="tab {% if tab=='performance' %}tab-active{% endif %}">Performance</a>
+</div>
+
+{% if tab=='predict' %}
+<div class="card bg-base-100 shadow-md mb-4">
+    <div class="card-body">
+        <h2 class="font-semibold text-lg">Single prediction</h2>
+        <p class="text-sm opacity-60 mb-2"></p>
+        <form hx-post="/model/{{ model.key }}/predict" hx-target="#result" hx-swap="innerHTML" hx-indicator="#spin">
+            <div class="grid md:grid-cols-2 gap-6">
+                {% for f in fields %}
+                <div>
+                    <label class="text-sm font-semibold">{{ f.desc or f.name }}
+                        {% if f.required %}<span class="text-error">*</span>{% endif %}</label>
+                    {% if f.kind == 'select' %}
+                    <select name="{{ f.name }}" class="select select-bordered w-full mt-1">
+                        {% for value, label in f.choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <input type="number" step="any" name="{{ f.name }}" {% if f.min is not none %}min="{{ f.min }}" {%
+                        endif %} {% if f.max is not none %}max="{{ f.max }}" {% endif %}
+                        class="input input-bordered w-full mt-1">
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="flex flex-row mt-6">
+                <button class="btn btn-primary">
+                    Predict </span>
+                </button>
+                <span id="spin" class="ml-3 text-primary htmx-indicator loading loading-spinner loading-sm"></span>
+            </div>
+
+
+        </form>
+        <div id="result" class="mt-4"></div>
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow-md">
+    <div class="card-body">
+        <h3 class="font-semibold text-lg">Batch prediction (Excel)</h3>
+        <p class="text-sm opacity-60 mb-2">Upload an .xlsx with the trait columns.
+        </p>
+        <form action="/model/{{ model.key }}/predict-excel" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx" required
+                class="file-input file-input-bordered file-input-sm w-full max-w-xs">
+            <button class="btn btn-outline btn-primary btn-sm">Upload</button>
+            <span id="spin" class="ml-3 text-primary htmx-indicator loading loading-spinner loading-sm"></span>
+
+        </form>
+    </div>
+</div>
+
+{% elif tab=='performance' %}
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+    <div class="stat bg-base-100 rounded-box shadow">
+        <div class="stat-title">Predictions</div>
+        <div class="stat-value text-2xl">{{ stats.total }}</div>
+    </div>
+    <div class="stat bg-base-100 rounded-box shadow">
+        <div class="stat-title">Avg score</div>
+        <div class="stat-value text-2xl">{{ stats.avg_pred if stats.avg_pred is not none else '—' }}</div>
+    </div>
+    <div class="stat bg-base-100 rounded-box shadow">
+        <div class="stat-title">👍 / 👎</div>
+        <div class="stat-value text-2xl">{{ stats.likes }}/{{ stats.dislikes }}</div>
+    </div>
+    <div class="stat bg-base-100 rounded-box shadow">
+        <div class="stat-title">Incomplete inputs</div>
+        <div class="stat-value text-2xl">{{ stats.pct_incomplete }}%</div>
+    </div>
+</div>
+<div class="card bg-base-100 shadow-md">
+    <div class="card-body">
+        <h3 class="font-semibold mb-2">Recent predictions</h3>
+        <div class="overflow-x-auto">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Score</th>
+                        <th>Missing</th>
+                        <th>Feedback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr>
+                        <td class="text-xs">{{ h.created_at[:19] }}</td>
+                        <td>{{ '%.2f'|format(h.prediction) }}</td>
+                        <td>{{ h.n_missing }}</td>
+                        <td>{{ h.feedback or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="opacity-50">No predictions yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

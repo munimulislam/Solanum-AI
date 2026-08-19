@@ -1,0 +1,48 @@
+{
+  "target": "o_a_score",
+  "features": {
+    "numeric": [
+      "tubersize",
+      "eveness",
+      "appearance",
+      "tubnumbers",
+      "eyedepth",
+      "yield",
+      "uniformity",
+      "ffscab",
+      "ffdefects",
+      "ffhollowh",
+      "ff_irs"
+    ],
+    "categorical": [
+      "env_type",
+      "trial_type",
+      "soil_type"
+    ],
+    "feature_cols_order": [
+      "tubersize",
+      "eveness",
+      "appearance",
+      "tubnumbers",
+      "eyedepth",
+      "yield",
+      "uniformity",
+      "ffscab",
+      "ffdefects",
+      "ffhollowh",
+      "ff_irs",
+      "env_type",
+      "trial_type",
+      "soil_type"
+    ]
+  },
+  "training_policy": {
+    "train_row_filter": "missing_frac_numeric <= 1 AND target_not_null",
+    "inference_filter": "none (pipeline handles missingness)"
+  },
+  "tuning": {
+    "method": "optuna_full_data_cv1",
+    "objective": "rmse_all (cv mean)",
+    "n_trials": 40
+  }
+}

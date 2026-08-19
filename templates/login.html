@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block content %}
+<div class="max-w-sm mx-auto mt-16 card bg-base-100 shadow-xl">
+    <div class="card-body">
+        <h2 class="card-title">Sign in</h2>
+        {% if error %}<div class="alert alert-error text-sm py-2">{{ error }}</div>{% endif %}
+        <form method="post" action="/login">
+            <input name="username" placeholder="Name" class="input input-bordered w-full my-2">
+            <input name="password" type="password" placeholder="Password" class="input input-bordered w-full my-2">
+            <button class="btn btn-primary w-full mt-2">Enter</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
